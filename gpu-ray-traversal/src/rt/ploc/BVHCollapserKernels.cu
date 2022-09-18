@@ -242,7 +242,7 @@ extern "C" __global__ void computeNodeOffsets(
 		int nodeOffset;
 
 		// Prefix scan.
-		unsigned int warpBallot = __ballot(nodeState > 0 && nodeIndex != 0);
+		unsigned int warpBallot = __ballot_sync(0xFFFFFFFF, nodeState > 0 && nodeIndex != 0);
 		int warpCount = __popc(warpBallot);
 		int warpIndex = __popc(warpBallot & ((1u << warpThreadIndex) - 1));
 
@@ -252,11 +252,11 @@ extern "C" __global__ void computeNodeOffsets(
 			warpOffset = atomicAdd(&interiorPrefixScanOffset, warpCount);
 
 		// Exchange offset between threads.
-		warpOffset = __shfl(warpOffset, 0);
+		warpOffset = __shfl_sync(0xFFFFFFFF, warpOffset, 0);
 		if (nodeState > 0) nodeOffset = warpOffset + warpIndex;
 
 		// Prefix scan.
-		warpBallot = __ballot(nodeState == 0);
+		warpBallot = __ballot_sync(0xFFFFFFFF, nodeState == 0);
 		warpCount = __popc(warpBallot);
 		warpIndex = __popc(warpBallot & ((1u << warpThreadIndex) - 1));
 
@@ -265,7 +265,7 @@ extern "C" __global__ void computeNodeOffsets(
 			warpOffset = atomicAdd(&leafPrefixScanOffset, warpCount);
 
 		// Exchange offset between threads.
-		warpOffset = __shfl(warpOffset, 0);
+		warpOffset = __shfl_sync(0xFFFFFFFF, warpOffset, 0);
 		if (nodeState == 0) nodeOffset = warpOffset + warpIndex;
 
 		// Node offset.
@@ -317,7 +317,7 @@ extern "C" __global__ void computeTriangleOffsets(
 		warpSum -= leafSize;
 
 		// Exchange offset between threads.
-		warpOffset = __shfl(warpOffset, 31);
+		warpOffset = __shfl_sync(0xFFFFFFFF, warpOffset, 31);
 
 		// Leaf.
 		if (nodeIndex < numberOfNodes && nodeState == 0) {

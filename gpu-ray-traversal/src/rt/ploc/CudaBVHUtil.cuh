@@ -126,11 +126,11 @@ __device__ __forceinline__ unsigned long long mortonCode64(const Vec3f & centroi
 // Hillis-Steele warp scan.
 __device__ __forceinline__ int warpScan(int warpThreadIndex, int warpSum) {
 	int warpValue = warpSum;
-	warpValue = __shfl_up(warpSum, 1); if (warpThreadIndex >= 1) warpSum += warpValue;
-	warpValue = __shfl_up(warpSum, 2); if (warpThreadIndex >= 2) warpSum += warpValue;
-	warpValue = __shfl_up(warpSum, 4); if (warpThreadIndex >= 4) warpSum += warpValue;
-	warpValue = __shfl_up(warpSum, 8); if (warpThreadIndex >= 8) warpSum += warpValue;
-	warpValue = __shfl_up(warpSum, 16); if (warpThreadIndex >= 16) warpSum += warpValue;
+	warpValue = __shfl_up_sync(0xFFFFFFFF, warpSum, 1); if (warpThreadIndex >= 1) warpSum += warpValue;
+	warpValue = __shfl_up_sync(0xFFFFFFFF, warpSum, 2); if (warpThreadIndex >= 2) warpSum += warpValue;
+	warpValue = __shfl_up_sync(0xFFFFFFFF, warpSum, 4); if (warpThreadIndex >= 4) warpSum += warpValue;
+	warpValue = __shfl_up_sync(0xFFFFFFFF, warpSum, 8); if (warpThreadIndex >= 8) warpSum += warpValue;
+	warpValue = __shfl_up_sync(0xFFFFFFFF, warpSum, 16); if (warpThreadIndex >= 16) warpSum += warpValue;
 	return warpSum;
 }
 

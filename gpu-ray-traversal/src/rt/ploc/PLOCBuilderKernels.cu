@@ -422,7 +422,7 @@ extern "C" __global__ void merge(
 		}
 
 		// Prefix scan.
-		const unsigned int warpBallot = __ballot(merging);
+		const unsigned int warpBallot = __ballot_sync(0xFFFFFFFF, merging);
 		const int warpCount = __popc(warpBallot);
 		const int warpIndex = __popc(warpBallot & ((1u << warpThreadIndex) - 1));
 
@@ -432,7 +432,7 @@ extern "C" __global__ void merge(
 			warpOffset = atomicAdd(&prefixScanOffset, warpCount);
 
 		// Exchange offset between threads.
-		warpOffset = __shfl(warpOffset, 0);
+		warpOffset = __shfl_sync(0xFFFFFFFF, warpOffset, 0);
 
 		// Node index.
 		const int nodeIndex = nodeOffset - warpOffset - warpIndex;

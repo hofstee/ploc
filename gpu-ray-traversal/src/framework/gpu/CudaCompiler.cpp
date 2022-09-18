@@ -213,8 +213,8 @@ String CudaCompiler::compileCubinFile(bool enablePrints, bool autoFail)
 
     if (autoFail)
         failIfError();
-        if (hasError())
-            return "";
+    if (hasError())
+        return "";
 
     // Cache directory does not exist => create it.
 
@@ -282,6 +282,8 @@ void CudaCompiler::staticInit(void)
         {
 			String prog = sprintf("%c:\\%s", drive, (progX86 == 0) ? "Program Files" : "Program Files (x86)");
 			potentialCudaPaths.add(prog + sprintf("\\NVIDIA GPU Computing Toolkit\\CUDA\\v%.1f", driverVersion));
+            //potentialVSPaths.add("C:\\Program Files(x86)\\Microsoft Visual Studio\\2019\\Community\\VC\\Tools\\MSVC\\14.29.30133\\include");
+            potentialVSPaths.add(prog + "\\Microsoft Visual Studio\\2022\\Community");
 			potentialVSPaths.add(prog + "\\Microsoft Visual Studio 12.0");
 			potentialVSPaths.add(prog + "\\Microsoft Visual Studio 11.0");
 			potentialVSPaths.add(prog + "\\Microsoft Visual Studio 10.0");
@@ -354,6 +356,8 @@ void CudaCompiler::staticInit(void)
     splitPathList(vsBinList, pathEnv);
     for (int i = 0; i < potentialVSPaths.getSize(); i++)
         vsBinList.add(potentialVSPaths[i] + "\\VC\\bin");
+    for (int i = 0; i < potentialVSPaths.getSize(); i++)
+        vsBinList.add(potentialVSPaths[i] + "\\VC\\Auxiliary\\Build");
 
     String vsBinPath;
     for (int i = 0; i < vsBinList.getSize(); i++)
@@ -364,6 +368,8 @@ void CudaCompiler::staticInit(void)
             break;
         }
     }
+
+    vsBinPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.31.31103\\bin";
 
     if (!vsBinPath.getLength())
         fail("Unable to detect Visual Studio binary path!\nPlease run VCVARS32.BAT.");
@@ -399,6 +405,7 @@ void CudaCompiler::staticInit(void)
         vsIncList.add(potentialVSPaths[i] + "\\VC\\INCLUDE");
 
     String vsIncPath;
+    String crtIncPath;
     for (int i = 0; i < vsIncList.getSize(); i++)
     {
         if (vsIncList[i].getLength() && fileExists(vsIncList[i] + "\\crtdefs.h"))
@@ -408,6 +415,8 @@ void CudaCompiler::staticInit(void)
         }
     }
 
+    vsIncPath = "C:\\Program Files\\Microsoft Visual Studio\\2022\\Community\\VC\\Tools\\MSVC\\14.31.31103\\include";
+    crtIncPath = "C:\\Program Files (x86)\\Windows Kits\\10\\Include\\10.0.19041.0\\ucrt";
     if (!vsIncPath.getLength())
         fail("Unable to detect Visual Studio include path!\nPlease run VCVARS32.BAT.");
 
@@ -419,17 +428,19 @@ void CudaCompiler::staticInit(void)
     printf("CUDA include path: \"%s\"\n", cudaIncPath.getPtr());
     printf("VS binary path:    \"%s\"\n", vsBinPath.getPtr());
     printf("VS include path:   \"%s\"\n", vsIncPath.getPtr());
+    printf("CRT include path:   \"%s\"\n", crtIncPath.getPtr());
     printf("\n");
 #endif
 
     // Form NVCC command line.
 
-    s_nvccCommand = sprintf("set PATH=%s;%s & nvcc.exe -ccbin \"%s\" -I\"%s\" -I\"%s\" -I. -D_CRT_SECURE_NO_DEPRECATE",
+    s_nvccCommand = sprintf("set PATH=%s;%s & nvcc.exe -ccbin \"%s\" -I\"%s\" -I\"%s\" -I\"%s\" -I. -D_CRT_SECURE_NO_DEPRECATE",
         cudaBinPath.getPtr(),
         pathEnv.getPtr(),
         vsBinPath.getPtr(),
         cudaIncPath.getPtr(),
-        vsIncPath.getPtr());
+        vsIncPath.getPtr(),
+        crtIncPath.getPtr());
 }
 
 //------------------------------------------------------------------------
