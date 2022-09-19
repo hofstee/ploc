@@ -4,6 +4,6 @@
     <ClInclude Include="src\Cub.h" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="src\Cub.cu" />
+    <CudaCompile Include="src\Cub.cu" />
   </ItemGroup>
 </Project>
